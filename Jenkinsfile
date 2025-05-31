@@ -2,12 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = 'DockerHub-credentials'   // Jenkins Docker Hub credentials ID
+        DOCKERHUB_CREDENTIALS = 'DockerHub-credentials'   
         DOCKERHUB_USERNAME = 'mounika1112'
         DEV_REPO = "${DOCKERHUB_USERNAME}/dev"
         PROD_REPO = "${DOCKERHUB_USERNAME}/prod"
-        DEPLOY_SERVER = 'ubuntu@54.172.29.192' // Your EC2 SSH user@host
-        DEPLOY_PATH = '/home/ubuntu/devops-build'       // Path on server where repo and scripts live
+        DEPLOY_PATH = '/home/ubuntu/devops-build'   // Local path on Jenkins server
     }
 
     stages {
@@ -36,13 +35,8 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', DOCKERHUB_CREDENTIALS) {
-                        if (env.BRANCH_NAME == 'dev') {
-                            dockerImage.push('latest')
-                            dockerImage.push("${env.BUILD_NUMBER}")
-                        } else if (env.BRANCH_NAME == 'master') {
-                            dockerImage.push('latest')
-                            dockerImage.push("${env.BUILD_NUMBER}")
-                        }
+                        dockerImage.push('latest')
+                        dockerImage.push("${env.BUILD_NUMBER}")
                     }
                 }
             }
@@ -51,14 +45,11 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 script {
-                    sshagent(['ssh-server']) {
-                        sh """
-                        ssh -o StrictHostKeyChecking=no ${DEPLOY_SERVER} '
-                            cd ${DEPLOY_PATH} &&
-                            ./deploy.sh
-                        '
-                        """
-                    }
+                    // Since Jenkins and deployment server are same, just run deploy.sh directly
+                    sh """
+                    cd ${DEPLOY_PATH}
+                    ./deploy.sh
+                    """
                 }
             }
         }
