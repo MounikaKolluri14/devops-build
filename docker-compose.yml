@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  react-app:
+    build: .
+    container_name: react-production-app
+    ports:
+      - "80:80"
+    restart: always
+
